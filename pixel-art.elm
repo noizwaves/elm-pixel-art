@@ -77,5 +77,20 @@ subscriptions model =
 
 -- INIT
 
+initGrid : Int -> Int -> Grid
+initGrid rows columns =
+  if rows == 0 then
+    []
+  else
+    initRow columns :: (initGrid (rows - 1) columns)
+
+initRow : Int -> List CellColour
+initRow size =
+  if size == 0 then
+    []
+  else
+    NoColour :: (initRow (size - 1))
+
+
 init : (Model, Cmd Msg)
-init = (Model [[NoColour,  NoColour], [NoColour,  Colour "blue"]], Cmd.none)
+init = (Model (initGrid 20 20), Cmd.none)
