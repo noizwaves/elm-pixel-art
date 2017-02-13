@@ -1,6 +1,7 @@
 import Html exposing (..)
 import Html.Attributes exposing (..)
---import Html.Events exposing (onInput)
+import Html.Events exposing (onClick)
+import Array exposing (Array)
 
 main =
     Html.program { init = init, view = view, update = update, subscriptions = subscriptions }
@@ -11,7 +12,7 @@ main =
 
 type CellColour = NoColour | Colour String
 
-type alias Grid = List (List CellColour)
+type alias Grid = Array (Array CellColour)
 
 type alias Model =
   { grid: Grid
@@ -20,13 +21,30 @@ type alias Model =
 
 -- UPDATE
 
-type Msg = ActionOne | ActionTwo
+type alias RowIndex = Int
+type alias ColumnIndex = Int
+
+type Msg = ColourPixel RowIndex ColumnIndex
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    ActionOne -> (model, Cmd.none)
-    ActionTwo -> (model, Cmd.none)
+    ColourPixel row column -> ({model | grid = updatePixelInGrid model.grid row column}, Cmd.none)
+
+
+updatePixelInGrid : Grid -> RowIndex -> ColumnIndex -> Grid
+updatePixelInGrid grid rowNumber columnNumber =
+  let
+    updatedRow = Array.get rowNumber grid
+  in
+    case updatedRow of
+      Just validRow -> Array.set rowNumber (updatePixelInRow validRow columnNumber) grid
+      Nothing -> grid
+
+updatePixelInRow : Array CellColour -> ColumnIndex -> Array CellColour
+updatePixelInRow row columnNumber =
+  Array.set columnNumber (Colour "blue") row
+
 
 
 
@@ -42,17 +60,28 @@ view model =
 
 gridAsPixels : Grid -> Html Msg
 gridAsPixels grid =
-  div [class "grid"] (List.map rowAsPixels grid)
+  let
+    rows = Array.toIndexedList grid -- List (Int, Array CellColour)
+  in
+    div [ class "grid" ] (List.map rowAsPixels rows)
 
-rowAsPixels : (List CellColour) -> Html Msg
-rowAsPixels row =
-  div [class "row"] (List.map cellAsPixel row)
+rowAsPixels : (Int, Array CellColour) -> Html Msg
+rowAsPixels (rowNum, row) =
+  let
+    cells = Array.toIndexedList row -- List (Int, CellColour)
+  in
+    div [class "row"] (List.map (cellAsPixel rowNum) cells)
 
-cellAsPixel : CellColour -> Html Msg
-cellAsPixel colour =
+
+cellAsPixel : Int -> (Int, CellColour) -> Html Msg
+cellAsPixel rowNum (columnNum, colour) =
   case colour of
-    Colour value -> div [ class "pixel", style [ ("backgroundColor", value) ] ] [ ]
-    NoColour -> div [ class "pixel", style [("backgroundColor", "white")] ] [ ]
+    Colour value -> div
+      [ class "pixel", style [ ("backgroundColor", value) ], onClick (ColourPixel rowNum columnNum) ]
+      [ ]
+    NoColour -> div
+      [ class "pixel", style [("backgroundColor", "white")], onClick (ColourPixel rowNum columnNum) ]
+      [ ]
 
 stylesheet : String -> Html Msg
 stylesheet url =
@@ -79,17 +108,11 @@ subscriptions model =
 
 initGrid : Int -> Int -> Grid
 initGrid rows columns =
-  if rows == 0 then
-    []
-  else
-    initRow columns :: (initGrid (rows - 1) columns)
+  Array.initialize rows (always (initRow columns))
 
-initRow : Int -> List CellColour
+initRow : Int -> Array CellColour
 initRow size =
-  if size == 0 then
-    []
-  else
-    NoColour :: (initRow (size - 1))
+  Array.initialize size (always NoColour)
 
 
 init : (Model, Cmd Msg)
