@@ -1,0 +1,10 @@
+.row {
+    line-height: 10px;
+}
+
+.pixel {
+    border: 1px solid #000;
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+}
