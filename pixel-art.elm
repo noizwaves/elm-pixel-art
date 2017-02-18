@@ -16,6 +16,7 @@ type alias Grid = Array (Array CellColour)
 
 type alias Model =
   { grid: Grid
+  , brush: String
   }
 
 
@@ -29,21 +30,21 @@ type Msg = ColourPixel RowIndex ColumnIndex
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    ColourPixel row column -> ({model | grid = updatePixelInGrid model.grid row column}, Cmd.none)
+    ColourPixel row column -> ({model | grid = updatePixelInGrid model.grid row column model.brush}, Cmd.none)
 
 
-updatePixelInGrid : Grid -> RowIndex -> ColumnIndex -> Grid
-updatePixelInGrid grid rowNumber columnNumber =
+updatePixelInGrid : Grid -> RowIndex -> ColumnIndex -> String -> Grid
+updatePixelInGrid grid rowNumber columnNumber brush =
   let
     updatedRow = Array.get rowNumber grid
   in
     case updatedRow of
-      Just validRow -> Array.set rowNumber (updatePixelInRow validRow columnNumber) grid
+      Just validRow -> Array.set rowNumber (updatePixelInRow validRow columnNumber brush) grid
       Nothing -> grid
 
-updatePixelInRow : Array CellColour -> ColumnIndex -> Array CellColour
-updatePixelInRow row columnNumber =
-  Array.set columnNumber (Colour "blue") row
+updatePixelInRow : Array CellColour -> ColumnIndex -> String -> Array CellColour
+updatePixelInRow row columnNumber brush =
+  Array.set columnNumber (Colour brush) row
 
 
 
@@ -116,4 +117,4 @@ initRow size =
 
 
 init : (Model, Cmd Msg)
-init = (Model (initGrid 20 20), Cmd.none)
+init = (Model (initGrid 20 20) "blue", Cmd.none)
