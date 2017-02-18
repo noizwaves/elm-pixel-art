@@ -8,3 +8,18 @@
     height: 10px;
     display: inline-block;
 }
+
+.palette {
+    margin: 10px;
+}
+
+.brush {
+    height: 50px;
+    width: 50px;
+    display: inline-block;
+    border: 2px solid white;
+}
+
+.brush.selected {
+    border: dotted black;
+}

@@ -17,6 +17,7 @@ type alias Grid = Array (Array CellColour)
 type alias Model =
   { grid: Grid
   , brush: String
+  , palette: List String
   }
 
 
@@ -25,13 +26,13 @@ type alias Model =
 type alias RowIndex = Int
 type alias ColumnIndex = Int
 
-type Msg = ColourPixel RowIndex ColumnIndex
+type Msg = ColourPixel RowIndex ColumnIndex | PickBrush String
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     ColourPixel row column -> ({model | grid = updatePixelInGrid model.grid row column model.brush}, Cmd.none)
-
+    PickBrush newBrush -> ({model | brush = newBrush}, Cmd.none)
 
 updatePixelInGrid : Grid -> RowIndex -> ColumnIndex -> String -> Grid
 updatePixelInGrid grid rowNumber columnNumber brush =
@@ -57,6 +58,7 @@ view model =
     [ stylesheet "reset.css"
     , stylesheet "style.css"
     , gridAsPixels model.grid
+    , div [class "palette"] (List.map (colourAsBrush model.brush) model.palette)
     ]
 
 gridAsPixels : Grid -> Html Msg
@@ -83,6 +85,18 @@ cellAsPixel rowNum (columnNum, colour) =
     NoColour -> div
       [ class "pixel", style [("backgroundColor", "white")], onClick (ColourPixel rowNum columnNum) ]
       [ ]
+
+colourAsBrush : String -> String -> Html Msg
+colourAsBrush selected colour =
+  div
+    [ classList
+      [ ("brush", True)
+      , ("selected", colour == selected)
+      ]
+    , style [("backgroundColor", colour)]
+    , onClick (PickBrush colour)
+    ] []
+
 
 stylesheet : String -> Html Msg
 stylesheet url =
@@ -115,6 +129,9 @@ initRow : Int -> Array CellColour
 initRow size =
   Array.initialize size (always NoColour)
 
+initPalette : List String
+initPalette = ["blue", "red", "yellow", "green"]
+
 
 init : (Model, Cmd Msg)
-init = (Model (initGrid 20 20) "blue", Cmd.none)
+init = (Model (initGrid 20 20) "blue" initPalette, Cmd.none)
